@@ -1,45 +1,34 @@
 #!/usr/bin/python3
-
 """Script that reads stdin line by line and computes metrics"""
-
 import sys
 
 
-def printsts(dic, size):
-    """ WWPrints information """
-    print("File size: {:d}".format(size))
-    for i in sorted(dic.keys()):
-        if dic[i] != 0:
-            print("{}: {:d}".format(i, dic[i]))
+total_size = 0
+status_count = {}
+line_count = 0
 
 
-sts = {"200": 0, "301": 0, "400": 0, "401": 0, "403": 0,
-       "404": 0, "405": 0, "500": 0}
-
-count = 0
-size = 0
-
+def print_stats():
+    global total_size, status_count
+    print("File size: {}".format(total_size))
+    for code in sorted(status_count.keys()):
+        print("{}: {}".format(code, status_count[code]))
 try:
     for line in sys.stdin:
-        if count != 0 and count % 10 == 0:
-            printsts(sts, size)
-
-        stlist = line.split()
-        count += 1
-
-        try:
-            size += int(stlist[-1])
-        except:
-            pass
-
-        try:
-            if stlist[-2] in sts:
-                sts[stlist[-2]] += 1
-        except:
-            pass
-    printsts(sts, size)
-
-
+        tokens = line.split()
+        if len(tokens) == 9 and tokens[0].count(".") == 3 and tokens[5].startswith('"GET') and tokens[6].startswith("/") and tokens[7].startswith("HTTP/") and tokens[8].isdigit():
+            status_code = int(tokens[8])
+            file_size = int(tokens[-1])
+            total_size += file_size
+            if status_code in status_count:
+                status_count[status_code] += 1
+            else:
+                status_count[status_code] = 1
+        line_count += 1
+        if line_count % 10 == 0:
+            print_stats()
 except KeyboardInterrupt:
-    printsts(sts, size)
+    print_stats()
     raise
+
+print_stats()
