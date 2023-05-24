@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 """
-Module 0-nqueens
 A program that solves the N queens problem
 """
 import sys
